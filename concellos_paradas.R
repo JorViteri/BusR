@@ -22,6 +22,9 @@ format_names<-function(data){
   for(i in 1:nrow(data)) 
   {
     concello_nm<-data$concello[i]
+    if(concello_nm=="COIROS"){
+      concello_nm<-'COIRÓS'
+    }
     #Se comprueba si el nombre contiene coma
     if(grepl(",",concello_nm)){
       #En caso afirmativo se invirten los extremos respecto a la coma
@@ -33,6 +36,8 @@ format_names<-function(data){
     #Se sustituyen los espacios y guiones por barras bajas, otrosi de poner en mayusculas
     data$concello[i] <- toupper(str_replace_all(data$concello[i],c(" " = "_", "-" = "_")))
   }
+  
+  data<-data[order(data$concello),]
   return(data)
 }
 
@@ -50,6 +55,8 @@ get_busstops<-function(data){
     #Se obtiene el df de los resultados
     answer_df <- answer$results 
     #Se comprueba que se tengan resultados
+    #print(data$concello[i]) #TODO Linea de debug
+    #print(nrow(answer_df)) #TODO Linea de debug
     if(length(answer_df)>0){
       
       answer_df <- answer_df %>%
@@ -58,9 +65,9 @@ get_busstops<-function(data){
         #... y aquellas cuyo ID se corresponda al del concello
         filter(startsWith(as.character(id), as.character(data$id[i])))
       
-      
       #Comprobamos que todavía queden entradas
       if(nrow(answer_df)>0){
+        #print(nrow(answer_df)) @TODO Linea de debug
         #Se renombran algunas columnas
         answer_df <- answer_df %>% rename("parada"="text","parada_id"="id_sitme")
         #Se agrega una columna con el ID del concello
@@ -94,7 +101,6 @@ concellos_df<-format_names(concellos_df)
 busstops_df <- get_busstops(concellos_df)
 
 #Se eliminan las paradas repetidas en base a sus coordenadas
-busstops_df_no_duplicates <- busstops_df[!duplicated(busstops_df$location), ]
+busstops_df <- busstops_df[!duplicated(busstops_df$location), ]
 
 #A este punto tengo todas las paradas disponibles con sus concellos
-

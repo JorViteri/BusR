@@ -5,3 +5,5 @@
 # Session Data files
 .RData
 .RDataTmp
+
+csv/*.csv
