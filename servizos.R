@@ -45,97 +45,16 @@ format_names<-function(data){
   return(data)
 }
 
-#Funcion con la que se obtiene el dataset de paradas de buses asocidas a su concello
-get_busstops<-function(data){
-  #Inicializamos un dataframe vacío
-  busstops_df<-data.frame()
-  #Para cada fila del dataframe de entrada (concellos)
-  for(i in 1:nrow(data)) 
-  {
-    #Se construye la url de la petición
-    url = sprintf(paste(BASE_URL,STOPS_URL,sep=''),data$concello[i])
-    #Se ejecuta la petición
-    answer <- GET(url) %>% convertir()
-    #Se obtiene el df de los resultados
-    answer_df <- answer$results 
-    #Se comprueba que se tengan resultados
-    print(data$concello[i]) #TODO Linea de debug
-    print(nrow(answer_df)) #TODO Linea de debug
-    if(length(answer_df)>0){
-      
-      answer_df <- answer_df %>%
-        #Filtramos las entradas de tipo 'municipality'...
-        filter(type!='municipality') %>%
-        #... y aquellas cuyo ID se corresponda al del concello
-        filter(startsWith(as.character(id), as.character(data$id[i])))
-      
-      #Comprobamos que todavía queden entradas
-      if(nrow(answer_df)>0){
-        print(nrow(answer_df))
-        #Se renombran algunas columnas
-        answer_df <- answer_df %>% rename("parada"="text","parada_id"="id_sitme")
-        #Se agrega una columna con el ID del concello
-        answer_df["id_concello"] = data$id[i]
-        #Se concatena el df al busstops_df
-        busstops_df<-rbind(busstops_df,answer_df)
-      }
-    } 
-  }
-  return(busstops_df)
-}
-
-
-get_services_municipalities <- function(concellos_df) {
-  
-  services_df <- data.frame()
-  pairs <- list("0"=FALSE) #TODO
-  
-  for(i in 1:nrow(concellos_df)) 
-  {
-    origin_id <- concellos_df$id[i]
-    
-    for(j in 1:nrow(concellos_df)){
-      cat("\014")  
-      print(sprintf("current i: %s",i))
-      print(sprintf("current j: %s",j))
-      
-      dest_id=concellos_df$id[j]
-      
-      pairs_key=sprintf("%s-%s",min(origin_id,dest_id),max(origin_id,dest_id))
-      
-      if ((origin_id!=dest_id)&(is.null(pairs[[pairs_key]]))){
-        
-        url = sprintf(paste(BASE_URL,SERVICES_URL,sep=''),origin_id,dest_id)
-
-        answer <- GET(url) %>% convertir()
-        asnwer_df <- answer$results
-        
-        if(length(asnwer_df)>0){
-          asnwer_df$id_origin <- asnwer_df$origin$id 
-          asnwer_df$id_destination <- asnwer_df$destination$id 
-          asnwer_df <- asnwer_df %>% select(-c("line_name","operator","contract_name","warnings",
-                                               "origin", "destination","special_rates","warnings"))
-          
-          services_df<-rbind(services_df,asnwer_df)
-          
-          pairs[[pairs_key]]<-TRUE
-        }
-      }
-    }
-  }
-  return(services_df)
-}
-
-
 get_services <- function(df,service_url) {
   
   services_df <- data.frame()
+  errors <- list(c("0-0"=TRUE))
 
-  for(i in 1:nrow(df)) 
+  for(i in 1:167) #1:167
   {
     origin_id <- df$id[i]
     
-    for(j in i:nrow(df)){
+    for(j in i:nrow(df)){ #i:nrow(df)
       cat("\014")  
       print(sprintf("current i: %s",i))
       print(sprintf("current j: %s",j))
@@ -147,7 +66,17 @@ get_services <- function(df,service_url) {
         
         url = sprintf(paste(BASE_URL,service_url,sep=''),origin_id,dest_id)
         
-        answer <- GET(url) %>% convertir()
+        answer <- GET(url) 
+        
+        if((validate(rawToChar(answer$content)))==FALSE){
+          #TODO
+          ##Registrar el par y salir de la iteracion para avanzar a la siguiente
+          errors[[sprintf('%s-%s',i,j)]]=TRUE
+          next
+        }
+        
+        answer <- convertir(answer)
+        
         asnwer_df <- answer$results
         
         if(length(asnwer_df)>0){
@@ -163,7 +92,14 @@ get_services <- function(df,service_url) {
         }
       }
     }
+    
+    if(i%%20==0){
+      path=sprintf("D:\\IFFE\\TFM\\services_municipalities_%s.csv",i)
+      write.csv(services_df,path,row.names=FALSE,fileEncoding = "UTF-8")
+
+    }
   }
+  errors
   return(services_df)
 }
 
@@ -189,23 +125,11 @@ concellos_df<-format_names(concellos_df)
 #services_municipalities_df <- get_services_municipalities(concellos_df)
 services_municipalities_df <- get_services(concellos_df,MUN_SERVICES_URL)
 
-
-
 #TODO me falta establecer el directorio
 write.csv(services_municipalities_df, "D:\\IFFE\\TFM\\services_municipalities.csv",
           row.names=FALSE,fileEncoding = "UTF-8")
 
-#Con concellos_df se obtienen las servicios que los comunican
-busstops_df <- get_services(concellos_df)
-#TODO
-services_busstops_df <- get_services(concellos_df,MUN_SERVICES_URL)
-write.csv(services_busstops_df, "D:\\IFFE\\TFM\\services_busstops.csv",
-          row.names=FALSE,fileEncoding = "UTF-8")
 
-#TODO aqui toca hacer la peticion de los servicios para cada parada de bus dentro del mismo concello
-#Ni idea de como hacerse, pero parece que no tienen registrado mucho
-#TODO creo que me valdria la misma funcion, solo cambiando la url (pasar otro parametro)
-services_busstops_df <- get_services_busstops(busstops_df,BUS_SERVICES_URL)
 
 #*****************************************************************#
 #Paradas y concellos de Santiago
