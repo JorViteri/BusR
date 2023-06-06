@@ -85,7 +85,7 @@ get_services <- function(df,service_url) {
           asnwer_df$time_origin <- asnwer_df$origin$time 
           asnwer_df$time_destination <- asnwer_df$destination$time
           asnwer_df <- asnwer_df %>% select(-c("line_name","operator","contract_name","warnings",
-                                               "origin", "destination","special_rates","warnings"))
+                                               "origin", "destination","special_rates"))
           
           services_df<-rbind(services_df,asnwer_df)
           
@@ -121,34 +121,8 @@ concellos_df<- concellos_df %>%
 concellos_df<-format_names(concellos_df)
 
 #TODO aqui tengo que hacer la peticion para obtener los servicios por combinacion de concello
-#TODO no me traga el DF pairs vacio
-#services_municipalities_df <- get_services_municipalities(concellos_df)
 services_municipalities_df <- get_services(concellos_df,MUN_SERVICES_URL)
 
 #TODO me falta establecer el directorio
 write.csv(services_municipalities_df, "D:\\IFFE\\TFM\\services_municipalities.csv",
           row.names=FALSE,fileEncoding = "UTF-8")
-
-
-
-#*****************************************************************#
-#Paradas y concellos de Santiago
-paradas_concellos_santiago <- GET('https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/busstops/autocomplete?text=BAÑOS_DE_MOLGAS&num_results=1000000')
-paradas_concellos_santiago <- convertir(paradas_concellos_santiago)
-paradas_concellos_santiago_df <- paradas_concellos_santiago$results
-
-paradas_santiago_df <- paradas_concellos_santiago_df %>% filter(type!='municipality') %>% filter(startsWith(as.character(id), '15078'))
-
-
-
-
-services <- GET('https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/service/search?origin_id=36057&destination_id=36003&origin_type=municipality&destination_type=municipality')
-services <- convertir(services)
-services <- services$results
-
-services$id_origin <- services$origin$id 
-services$id_destination <- services$destination$id 
-
-services <- services %>% select(-c("line_name","operator","contract_name","warnings","origin", "destination","special_rates","warnings"))
-                               
-                               
