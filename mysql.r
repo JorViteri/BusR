@@ -18,12 +18,13 @@ mydb <- dbConnect(driver, user = usr, password = pass,
                   dbname=database, host=host,port=port)
 
 #Cargamos los datos
-routes_df <- fread("$$$$") #PONER AQUI EL DIRECTORIO CORRESPONDIENTE
+routes_df <- fread("$$$$") #PONER AQUI EL DIRECTORIO CORRESPONDIENTE AL ARCHIVO CSV
 
-#Para que se puedan meter datos en el SQL hay que ejecutar en la:
+#Para que se puedan meter datos en el SQL hay que ejecutar en la BD:
 #SET GLOBAL local_infile=1;
+
 #Crea tabla y mete datos 
 dbWriteTable(mydb, "Routes", routes_df, append = TRUE, row.names = FALSE)
 
-#Cerrar conecxion
+#Cerrar conexion
 dbDisconnect(mydb)
