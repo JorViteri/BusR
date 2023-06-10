@@ -7,3 +7,4 @@
 .RDataTmp
 
 csv/*.csv
+lines_json/*.json

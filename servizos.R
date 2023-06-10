@@ -3,6 +3,7 @@ library(httr)
 library(jsonlite)
 library(dplyr)
 library(stringr)
+library(data.table)
 
 #Constantes
 BASE_URL='https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/'
@@ -50,11 +51,11 @@ get_services <- function(df,service_url) {
   services_df <- data.frame()
   errors <- list(c("0-0"=TRUE))
 
-  for(i in 1:167) #1:167
+  for(i in 1:nrow(df))
   {
     origin_id <- df$id[i]
     
-    for(j in i:nrow(df)){ #i:nrow(df)
+    for(j in i:nrow(df)){ 
       cat("\014")  
       print(sprintf("current i: %s",i))
       print(sprintf("current j: %s",j))
@@ -94,6 +95,7 @@ get_services <- function(df,service_url) {
     }
     
     if(i%%20==0){
+      #Por seguridad, se escribe un csv cada 20 iteraciones de i
       path=sprintf("D:\\IFFE\\TFM\\services_municipalities_%s.csv",i)
       write.csv(services_df,path,row.names=FALSE,fileEncoding = "UTF-8")
 
@@ -120,9 +122,55 @@ concellos_df<- concellos_df %>%
 #Se llama a la funcion que formatea concellos_df
 concellos_df<-format_names(concellos_df)
 
-#TODO aqui tengo que hacer la peticion para obtener los servicios por combinacion de concello
+#Peticion para obtener los servicios por combinacion de concello
 services_municipalities_df <- get_services(concellos_df,MUN_SERVICES_URL)
 
-#TODO me falta establecer el directorio
+#Debido a lo grande que fue la consulta, guardamos los resultados en un csv
 write.csv(services_municipalities_df, "D:\\IFFE\\TFM\\services_municipalities.csv",
           row.names=FALSE,fileEncoding = "UTF-8")
+
+#Vamos a cargar desde la carpeta de csv unos resultantes de una ejecución distribuida del codigo
+csv1 <- fread("D:\\IFFE\\TFM\\csv\\servizos3.csv")
+csv2 <- fread("D:\\IFFE\\TFM\\csv\\servizos4.csv")
+
+final_services_df<- services_municipalities_df %>% 
+                    rbind(csv2) %>%
+                    rbind(csv2)
+
+#Quitamos filas repetidas
+final_services_df <- final_services_df %>% distinct()
+
+write.csv(final_services_df, "D:\\IFFE\\TFM\\csv\\services_municipalities_complete.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
+
+#Ahora vamos a generar tablas a partir de los valores de las columnas de frecuencias
+final_services_df <- fread( "D:\\IFFE\\TFM\\csv\\services_municipalities_complete.csv")
+#Frecuencias semanales
+week_frequency <- unique(final_services_df$week_frequency)
+week_frequency_df <- data.frame(week_frequency)
+week_frequency_df <- week_frequency_df %>% mutate(id = row_number()) %>% select(c("id","week_frequency"))
+
+#Frecuencias anuales
+anual_frequency<- unique(final_services_df$anual_frequency)
+anual_frequency_df <- data.frame(anual_frequency)
+anual_frequency_df <- anual_frequency_df %>% mutate(id = row_number()) %>% select(c("id","anual_frequency"))
+
+#Se escribe un CSV para cada tablas de las frecuencias
+write.csv(week_frequency_df, "D:\\IFFE\\TFM\\csv\\week_freq.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
+
+write.csv(anual_frequency_df, "D:\\IFFE\\TFM\\csv\\anual_freq.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
+
+#Ahora vamos a añadir los ids de los valores de frecuencias a la tabla de los servicios
+final_services_df <- merge(x=final_services_df,y=week_frequency_df,by='week_frequency',all.x=TRUE)
+final_services_df <- final_services_df %>% rename(id=id.x,weekly_id=id.y)
+
+final_services_df <- merge(x=final_services_df,y=anual_frequency_df,by='anual_frequency',all.x=TRUE)
+final_services_df <- final_services_df %>% rename(id=id.x,anual_id=id.y)
+
+final_services_df <- final_services_df %>% select(-c('week_frequency','anual_frequency'))
+#Se guarda el csv actual, dado que va a ser preciso hacer nuevas iteraciones dado que salen operadores y lineas desconocidas
+write.csv(final_services_df, "D:\\IFFE\\TFM\\csv\\services_municipalities_freq.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
+

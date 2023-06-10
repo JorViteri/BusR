@@ -104,3 +104,12 @@ busstops_df <- get_busstops(concellos_df)
 busstops_df <- busstops_df[!duplicated(busstops_df$location), ]
 
 #A este punto tengo todas las paradas disponibles con sus concellos
+
+#Escribimos las paradas en un csv
+write.csv(busstops_df, "D:\\IFFE\\TFM\\csv\\busstops.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
+
+#Escribimos los concellos en un csv
+write.csv(concellos_df, "D:\\IFFE\\TFM\\csv\\concellos.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
+
