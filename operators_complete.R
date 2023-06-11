@@ -5,12 +5,11 @@ library(dplyr)
 library(stringr)
 library(data.table)
 
-# URL DE LA API OPERADORES-CONTRATOS
-URL_CONTRATOS<-"https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/operators/get?operator_id=%s&operator_type=%s"
-URL_ALL_OPERATORS <- "https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/operators/autocomplete?text=L&numresults=10&show_all=true"
-OPERATOR="operator"
-GROUP="group"
+#Con este script se comprueba que no tenemos, de la consulta previa, todos los operadores que salen para los servicios.
+#Se una nueva peticion para obtener los operadores que faltaban.
 
+# URL DE LA API OPERADORES-CONTRATOS
+URL_ALL_OPERATORS <- "https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/operators/autocomplete?text=L&numresults=10&show_all=true"
 
 # Convertir el texto en un dataframe
 convertir <- function(datos){
@@ -22,7 +21,7 @@ convertir <- function(datos){
 }
 
 #Se carga el dataframe de los servicios y de los operadores
-services_df <- fread( "D:\\IFFE\\TFM\\csv\\services_municipalities_freq.csv")
+services_df <- fread( "D:\\IFFE\\TFM\\csv\\servies_lines_contracts_operators.csv")
 operators_df <- fread( "D:\\IFFE\\TFM\\csv\\operators_base.csv")
 
 #Comprobamos que los operadores de los servicios no coinciden conn los que teniamos

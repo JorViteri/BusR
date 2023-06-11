@@ -4,6 +4,9 @@ library(dplyr)
 library(stringr)
 library(data.table)
 
+#Con este script se genera el df de los contratos y se actualiza el de servicios para que referencie
+#al id de estos
+
 # URL DE LA API OPERADORES-CONTRATOS
 URL_CONTRATOS<-"https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/operators/contracts"
 
@@ -20,7 +23,7 @@ convertir <- function(datos){
 
 #Es necesario tener bien los contratos y los operadores, cada cual deberia ser una tabla 
 #Las tablas no deberian estar relacionadas directamente, si no a los servicios
-services_df <- fread("D:\\IFFE\\TFM\\csv\\servies_lines.csv")
+services_df <- fread("D:\\IFFE\\TFM\\csv\\services_lines.csv")
 operators_df <- fread("D:\\IFFE\\TFM\\csv\\operators_complete.csv")
 
 
@@ -32,11 +35,11 @@ contratos_df <- contratos$results
 
 #Codigos de contratos en el df recien cargado
 tmp1 <- data.frame(unique(contratos_df$code)) %>% 
-        rename(contract_id=unique.contratos_df.code.)
+        rename(id_contract=unique.contratos_df.code.)
 
 #Codigos de contratos en el df de servicios
 tmp2 <- data.frame(unique(services_df$contract_code)) %>% 
-        rename(contract_id=unique.services_df.contract_code.)
+        rename(id_contract=unique.services_df.contract_code.)
 
 
 tmp3 <- anti_join(tmp2,tmp1) #Tenemos todos los contratos, coinciden
@@ -58,7 +61,7 @@ services_contracts_df <- services_df %>%
                         rename(code=contract_code) %>%
                         merge(y=contratos_df,by='code',all.x=TRUE) %>%
                         select(-c("code","contract_nm","consolidated")) %>%
-                        rename(contract_id=id.y,id=id.x)
+                        rename(id_contract=id.y,id=id.x)
 
 #Guardamos el nuevo csv de servicios
 write.csv(services_contracts_df, "D:\\IFFE\\TFM\\csv\\servies_lines_contracts_operators.csv",

@@ -5,13 +5,13 @@ library(dplyr)
 library(stringr)
 library(data.table)
 
+#En este script se obtienen los servicios que hay para cada par de concellos
+
 #Constantes
 BASE_URL='https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/'
 STOPS_URL='busstops/autocomplete?text=%s&num_results=1000000'
 SERVICES_URL='service/search?origin_id=%s&destination_id=%s&origin_type=municipality&destination_type=municipality'
-
 MUN_SERVICES_URL='service/search?origin_id=%s&destination_id=%s&origin_type=municipality&destination_type=municipality'
-BUS_SERVICES_URL='service/search?origin_id=%s&destination_id=%s&origin_type=busstop&destination_type=busstop'
 
 
 convertir <- function(datos){
@@ -50,37 +50,41 @@ get_services <- function(df,service_url) {
   
   services_df <- data.frame()
   errors <- list(c("0-0"=TRUE))
-
+  
+  #Para cada entrada del df de concellos...
   for(i in 1:nrow(df))
   {
     origin_id <- df$id[i]
     
+    #Obtenemos los servicios que tiene para cada concello posterior en el df
     for(j in i:nrow(df)){ 
       cat("\014")  
       print(sprintf("current i: %s",i))
       print(sprintf("current j: %s",j))
       
       dest_id=df$id[j]
-      
-      
+      #Se comprueba que origen y destino no sean el mismo
       if (origin_id!=dest_id){
         
         url = sprintf(paste(BASE_URL,service_url,sep=''),origin_id,dest_id)
         
         answer <- GET(url) 
-        
+        #Se comprueba que la respuesta sea un json, otro caso es mensaje de error
         if((validate(rawToChar(answer$content)))==FALSE){
-          #TODO
-          ##Registrar el par y salir de la iteracion para avanzar a la siguiente
+          #En caso de error se almacena en "errors...
           errors[[sprintf('%s-%s',i,j)]]=TRUE
+          #Y se avanza a la siguiente iteracion en j
           next
         }
         
+        #En caso positivo procesamos la respuesta como siempre
         answer <- convertir(answer)
         
         asnwer_df <- answer$results
         
         if(length(asnwer_df)>0){
+          #La respuesta json es de forma peculiar, por lo que se generan columnas y
+          #se eliminan otras entradas para que se adapte mejor
           asnwer_df$id_origin <- asnwer_df$origin$id 
           asnwer_df$id_destination <- asnwer_df$destination$id 
           asnwer_df$time_origin <- asnwer_df$origin$time 
@@ -88,6 +92,7 @@ get_services <- function(df,service_url) {
           asnwer_df <- asnwer_df %>% select(-c("line_name","operator","contract_name","warnings",
                                                "origin", "destination","special_rates"))
           
+          #Se concatena el df de la respuesta al del resultado
           services_df<-rbind(services_df,asnwer_df)
           
         }
@@ -101,7 +106,9 @@ get_services <- function(df,service_url) {
 
     }
   }
+  #Al final se imprime "errors"...
   errors
+  #y se retorna el df de los servicios
   return(services_df)
 }
 
@@ -130,11 +137,12 @@ write.csv(services_municipalities_df, "D:\\IFFE\\TFM\\services_municipalities.cs
           row.names=FALSE,fileEncoding = "UTF-8")
 
 #Vamos a cargar desde la carpeta de csv unos resultantes de una ejecución distribuida del codigo
+services_municipalities_df <- fread("D:\\IFFE\\TFM\\csv\\services_municipalities.csv")
 csv1 <- fread("D:\\IFFE\\TFM\\csv\\servizos3.csv")
 csv2 <- fread("D:\\IFFE\\TFM\\csv\\servizos4.csv")
 
 final_services_df<- services_municipalities_df %>% 
-                    rbind(csv2) %>%
+                    rbind(csv1) %>%
                     rbind(csv2)
 
 #Quitamos filas repetidas
@@ -145,15 +153,22 @@ write.csv(final_services_df, "D:\\IFFE\\TFM\\csv\\services_municipalities_comple
 
 #Ahora vamos a generar tablas a partir de los valores de las columnas de frecuencias
 final_services_df <- fread( "D:\\IFFE\\TFM\\csv\\services_municipalities_complete.csv")
+
 #Frecuencias semanales
 week_frequency <- unique(final_services_df$week_frequency)
 week_frequency_df <- data.frame(week_frequency)
-week_frequency_df <- week_frequency_df %>% mutate(id = row_number()) %>% select(c("id","week_frequency"))
+#Se le genera la columna de ids en base al num de fila
+week_frequency_df <- week_frequency_df %>% 
+                     mutate(id = row_number()) %>% 
+                     select(c("id","week_frequency"))
 
 #Frecuencias anuales
 anual_frequency<- unique(final_services_df$anual_frequency)
 anual_frequency_df <- data.frame(anual_frequency)
-anual_frequency_df <- anual_frequency_df %>% mutate(id = row_number()) %>% select(c("id","anual_frequency"))
+#Se le genera la columna de ids en base al num de fila
+anual_frequency_df <- anual_frequency_df %>% 
+                      mutate(id = row_number()) %>% 
+                      select(c("id","anual_frequency"))
 
 #Se escribe un CSV para cada tablas de las frecuencias
 write.csv(week_frequency_df, "D:\\IFFE\\TFM\\csv\\week_freq.csv",
@@ -164,12 +179,16 @@ write.csv(anual_frequency_df, "D:\\IFFE\\TFM\\csv\\anual_freq.csv",
 
 #Ahora vamos a añadir los ids de los valores de frecuencias a la tabla de los servicios
 final_services_df <- merge(x=final_services_df,y=week_frequency_df,by='week_frequency',all.x=TRUE)
-final_services_df <- final_services_df %>% rename(id=id.x,weekly_id=id.y)
+final_services_df <- final_services_df %>% 
+                     rename(id=id.x,weekly_id=id.y)
 
 final_services_df <- merge(x=final_services_df,y=anual_frequency_df,by='anual_frequency',all.x=TRUE)
-final_services_df <- final_services_df %>% rename(id=id.x,anual_id=id.y)
+final_services_df <- final_services_df %>% 
+                     rename(id=id.x,anual_id=id.y)
 
-final_services_df <- final_services_df %>% select(-c('week_frequency','anual_frequency'))
+final_services_df <- final_services_df %>% 
+                     select(-c('week_frequency','anual_frequency'))
+
 #Se guarda el csv actual, dado que va a ser preciso hacer nuevas iteraciones dado que salen operadores y lineas desconocidas
 write.csv(final_services_df, "D:\\IFFE\\TFM\\csv\\services_municipalities_freq.csv",
           row.names=FALSE,fileEncoding = "UTF-8")

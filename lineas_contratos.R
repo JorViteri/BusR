@@ -3,6 +3,8 @@ library(jsonlite)
 library(dplyr)
 library(stringr)
 
+#Con este script se hacen peticiones para conseguir las lineas y los contratos
+
 #URL de la API DE LINEAS
 URL_LINEAS<-"https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/lines"
 # URL DE LA API OPERADORES-CONTRATOS
@@ -26,8 +28,6 @@ lineas <- convertir(lineas)
 #Se obtiene el df de los resultados
 lineas_df <- lineas$results
 lineas_df <- lineas_df %>% select(c("id","line_name")) %>% unique()
-
-
 
 # Contratos
 contratos <- GET(URL_CONTRATOS)
