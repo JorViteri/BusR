@@ -91,7 +91,7 @@ concellos_df<- concellos_df %>%
   #Se renombra la columna "text" a "concello"
   rename("municipality"="text") %>% 
   #Se eliminan las entradas de nombre 'DESCOÑECIDO'
-  filter('municipality'!='DESCOÑECIDO')
+  filter(municipality!='DESCOÑECIDO')
 
 #Se llama a la funcion que formatea concellos_df
 concellos_df<-format_names(concellos_df)
