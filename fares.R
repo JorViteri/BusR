@@ -1,7 +1,6 @@
 library(httr)
 library(jsonlite)
 library(dplyr)
-library(stringr)
 library(data.table)
 library(stringi)
 
