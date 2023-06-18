@@ -21,11 +21,8 @@ convertir <- function(datos){
 }
 
 
-#Es necesario tener bien los contratos y los operadores, cada cual deberia ser una tabla 
-#Las tablas no deberian estar relacionadas directamente, si no a los servicios
+#Se carga la tabla de servicios, con la cual se va a establecer la relación
 services_df <- fread("D:\\IFFE\\TFM\\csv\\services_lines.csv")
-operators_df <- fread("D:\\IFFE\\TFM\\csv\\operators_complete.csv")
-
 
 # Contratos
 contratos <- GET(URL_CONTRATOS)

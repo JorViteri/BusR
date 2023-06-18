@@ -27,7 +27,6 @@ lineas <- GET(URL_LINEAS)
 lineas <- convertir(lineas)
 #Se obtiene el df de los resultados
 lineas_df <- lineas$results
-lineas_df <- lineas_df %>% select(c("id","line_name")) %>% unique()
 
 # Contratos
 contratos <- GET(URL_CONTRATOS)
@@ -54,6 +53,15 @@ contratos_df <- contratos_df %>% mutate(id = row_number())
 #Se renombra la columna de name
 contratos_df <- contratos_df %>% 
   rename("contract"="name")
+
+#Se esriben las líneas para trabajar mas comodamente
+write.csv(lineas_df, "D:\\IFFE\\TFM\\csv\\lines_base.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
+
+
+#Se esriben los contratos para trabajar mas comodamente
+write.csv(contratos_df, "D:\\IFFE\\TFM\\csv\\contratos.csv",
+          row.names=FALSE,fileEncoding = "UTF-8")
 
 #Se esriben los operadores para trabajar mas comodamente
 write.csv(operators_df, "D:\\IFFE\\TFM\\csv\\operators_base.csv",

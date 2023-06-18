@@ -8,3 +8,7 @@
 
 csv/*.csv
 lines_json/*.json
+Memoria/*.docx
+PwBI/*
+
+mysql.r

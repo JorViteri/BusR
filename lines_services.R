@@ -7,12 +7,7 @@ library(data.table)
 
 #URL de la API DE LINEAS
 URL_LINEAS<-"https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/lines/search?page_number=%s&page_size=30000"
-# URL DE LA API OPERADORES-CONTRATOS
-URL_CONTRATOS<-"https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/operators/contracts"
 
-
-# Convertir el texto en un dataframe
-#data_contratos <- fromJSON(content)
 convertir <- function(datos){
   # Esta funcion ayurdará a convertir info del API en dataframes
   data = rawToChar(datos$content)
@@ -50,7 +45,7 @@ services_lines_id <- data.frame(services_lines_id) %>% rename(id=services_lines_
 lines_id <- unique(lineas_df$id)
 lines_id <- data.frame(lines_id) %>% rename(id=lines_id) 
 missing_lines_id_df <- anti_join(services_lines_id,lines_id) 
-#Nos faltan todas las lineas de los servicios ...
+#Faltan todavía las lineas de los servicios...
 
 
 #Vamos a pillar las lineas que no tenemos y meterlas en el df de las lineas, dado que no parece haber otra forma
@@ -71,6 +66,7 @@ lines_group_df <- lineas_df %>%
                   group_by(id) %>%
                   mutate(line_name = paste0(line_name, collapse = " | ")) %>%
                   distinct()
+                  
 #Escribimos el nuevo df de lineas en un csv
 write.csv(lines_group_df, "D:\\IFFE\\TFM\\csv\\lines_grouped.csv",
           row.names=FALSE,fileEncoding = "UTF-8")

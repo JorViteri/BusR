@@ -132,22 +132,10 @@ concellos_df<-format_names(concellos_df)
 #Peticion para obtener los servicios por combinacion de concello
 services_municipalities_df <- get_services(concellos_df,MUN_SERVICES_URL)
 
-#Debido a lo grande que fue la consulta, guardamos los resultados en un csv
-write.csv(services_municipalities_df, "D:\\IFFE\\TFM\\services_municipalities.csv",
-          row.names=FALSE,fileEncoding = "UTF-8")
-
-#Vamos a cargar desde la carpeta de csv unos resultantes de una ejecución distribuida del codigo
-services_municipalities_df <- fread("D:\\IFFE\\TFM\\csv\\services_municipalities.csv")
-csv1 <- fread("D:\\IFFE\\TFM\\csv\\servizos3.csv")
-csv2 <- fread("D:\\IFFE\\TFM\\csv\\servizos4.csv")
-
-final_services_df<- services_municipalities_df %>% 
-                    rbind(csv1) %>%
-                    rbind(csv2)
-
 #Quitamos filas repetidas
-final_services_df <- final_services_df %>% distinct()
+final_services_df <- services_municipalities_df %>% distinct()
 
+#Y las guardamos en un CSV
 write.csv(final_services_df, "D:\\IFFE\\TFM\\csv\\services_municipalities_complete.csv",
           row.names=FALSE,fileEncoding = "UTF-8")
 
