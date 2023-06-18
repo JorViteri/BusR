@@ -8,7 +8,7 @@ library(data.table)
 #Con este script se comprueba que no tenemos, de la consulta previa, todos los operadores que salen para los servicios.
 #Se una nueva peticion para obtener los operadores que faltaban.
 
-# URL DE LA API OPERADORES-CONTRATOS
+# URL DE LA API OPERADORES
 URL_ALL_OPERATORS <- "https://tpgal-ws-externos.xunta.gal/tpgal_ws/rest/operators/autocomplete?text=L&numresults=10&show_all=true"
 
 # Convertir el texto en un dataframe
@@ -27,11 +27,11 @@ operators_df <- fread( "D:\\IFFE\\TFM\\csv\\operators_base.csv")
 #Comprobamos que los operadores de los servicios no coinciden conn los que teniamos
 service_operators<- unique(services_df$operator_id)
 service_operators_df <- data.frame(service_operators) %>% rename(id=service_operators) #98
-
+identical(service_operators_df, operators_df)
 
 #Comprobamos los ids que nos faltaban (son todos)
 missing_id_df <- anti_join(service_operators_df,operators_df)
-nrow(missing_id_df) #98
+nrow(missing_id_df)
 
 # Peticion que recupera todos los operadores
 all_operators <- GET(URL_ALL_OPERATORS)

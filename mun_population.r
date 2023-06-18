@@ -10,8 +10,6 @@ setwd('D:\\IFFE\\TFM\\csv\\')
 municipalities_df <- fread("concellos.csv")
 pob_2022_df <- fread("2022.csv")
 
-fares_df <- fread("fares_final.csv")
-
 #Ponemos a 0 las entradas que no tienen registrada población alguna
 #y transformamos los valores a numericos
 

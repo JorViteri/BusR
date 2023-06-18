@@ -9,17 +9,15 @@ library(data.table)
 
 services_df <- fread("D:\\IFFE\\TFM\\csv\\servies_lines_contracts_operators.csv")
 
-#Falta hacer algo mas de limpieza en la tabla de servicios
-
+#Se comienza cargando unos dataframes correspondientes a los nombres de rutas y servicios
 route_names_df <- data.frame(unique(services_df$route_name)) %>% rename(name=unique.services_df.route_name.)
 expedition_names_df <- data.frame(unique(services_df$expedition_name)) %>% rename(name=unique.services_df.expedition_name.)
 
-tmp <- anti_join(expedition_names_df,route_names_df) 
-nrow(tmp) #0
-#Son iguales, podemos descartar las dos dado que los tenemos como nombres de lineas
+#Se habia apreciado que el estos valores son similares y se comprueban
+identical(expedition_names_df,route_names_df)
+#Son iguales
 
-
-#####Del services sobran: line_code, route_name, expedition_name
+#Se procede a crear el df de las expediciones
 expeditions_df <- services_df %>%
                   select(c("expedition_name","expedition_code")) %>% 
                   unique() %>%
@@ -29,8 +27,7 @@ expeditions_df <- services_df %>%
 write.csv(expeditions_df, "D:\\IFFE\\TFM\\csv\\expeditions.csv",
           row.names=FALSE,fileEncoding = "UTF-8")
 
-#####Del services sobran: line_code, route_name, expedition_name
-
+#Se procede a crear el df de las rutas
 routes_df <- services_df %>%
   select(c("route_name","route_code")) %>% 
   unique() %>%
@@ -49,7 +46,7 @@ services_expeditions_routes_df <- merge(routes_df, services_expeditions_df, by=c
                                   rename(id_route=id.x,id=id.y) %>%
                                   select(-c("route_code","route_name"))
 
-#TODO vamos a añadir una columna de ids por posición para identificar cada fila
+#Vamos a añadir una columna de ids por posición para identificar cada fila
 #De paso se modifca el nombre de algunas columnas y el orden de estas
 services_df <- services_expeditions_routes_df %>% 
                rename(

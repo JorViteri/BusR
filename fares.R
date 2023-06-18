@@ -19,14 +19,14 @@ fares_df$AYUNTAMIENTO_DESTINO <- toupper(fares_df$AYUNTAMIENTO_DESTINO)
 
 #Se eliminan las tildes de los textos del df de tarifas
 fares_df$AYUNTAMIENTO_ORIGEN <- stri_replace_all_regex(fares_df$AYUNTAMIENTO_ORIGEN,
-                                                       pattern=c('á','é','í','ó','ú','Á','É','Í','Ó','Ú'),
-                                                       replacement=c('a','e','i','o','u','A','E','I','O','U'),
-                                                       vectorize=FALSE)
+                                pattern=c('á','é','í','ó','ú','Á','É','Í','Ó','Ú'),
+                                replacement=c('a','e','i','o','u','A','E','I','O','U'),
+                                vectorize=FALSE)
 
 fares_df$AYUNTAMIENTO_DESTINO <- stri_replace_all_regex(fares_df$AYUNTAMIENTO_DESTINO,
-                                                        pattern=c('á','é','í','ó','ú','Á','É','Í','Ó','Ú'),
-                                                        replacement=c('a','e','i','o','u','A','E','I','O','U'),
-                                                        vectorize=FALSE)
+                                  pattern=c('á','é','í','ó','ú','Á','É','Í','Ó','Ú'),
+                                  replacement=c('a','e','i','o','u','A','E','I','O','U'),
+                                  vectorize=FALSE)
 
 
 #Ahora toca hacer el merge en base a substr
@@ -43,8 +43,6 @@ equals_df <- merge(origin_df,municipalities_df,by="municipality")
 
 #y ahora obtenemos los concellos que no coinciden
 missing_df<-anti_join(origin_df,municipalities_df,by="municipality")
-
-
 
 
 #En el municipalidades hay que quitar tildes
@@ -84,7 +82,8 @@ for(i in 1:nrow(missing_df)){
   }
 }
 
-#Con last_df y equals_df puedo filtar aquellos ids que ya tenia en equals_df, quedandome solo con los nuevos
+#Con last_df y equals_df puedo filtar aquellos ids que ya tenia en equals_df, 
+#quedandome solo con los nuevos
 last_df<-anti_join(last_df,equals_df,by="id")
 
 #Ahora ya los podemos concatenar
@@ -95,7 +94,7 @@ origin_df$municipality<- stri_replace_all_regex(origin_df$municipality,
                                                 pattern=c('-'),
                                                 replacement=c('_'),
                                                 vectorize=FALSE)
-#Y modifcanto del concello previo
+#Y modificando del concello previo
 origin_df$municipality[origin_df$municipality == "SAN_CRISTOVO_DE_CEA"] <-"SAN_CRISTOBO_DE_CEA"
 
 error <- anti_join(origin_df,fares_mun_df,by="municipality")
@@ -104,7 +103,7 @@ error <- anti_join(origin_df,fares_mun_df,by="municipality")
 error <- anti_join(fares_mun_df,origin_df,by="municipality")
 #Hay 0 entradas, está todo correcto
 
-#Se perada el df para su merge, cambiando el nombre de la columna
+#Se prepara el df para su merge, cambiando el nombre de la columna
 fares_mun_df<- fares_mun_df %>%
   rename(AYUNTAMIENTO_ORIGEN=municipality)
 
@@ -131,7 +130,8 @@ fares_df2<- fares_df2 %>%
 write.csv(fares_df2, "D:\\IFFE\\TFM\\csv\\fares_df.csv",
           row.names=FALSE,fileEncoding = "UTF-8")
 
-#Debido a la complejidad de los nombres de las columnas se han cambiando directamente en un editor de texto
+#Debido a la complejidad de los nombres de las columnas se han cambiando directamente
+#en un editor de texto
 #Vamos a cargar para cambiar las columnas de lugar y añadir ids
 new_fares_df <- fread("D:\\IFFE\\TFM\\csv\\fares_new_names.csv")
 
@@ -145,18 +145,41 @@ new_fares_df <- new_fares_df %>%
 
 
 #Convertir las columnas de precios en numericas
-new_fares_df$fee_in_cash <- as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_in_cash )))
-new_fares_df$fee_tmg_until40 <- as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_tmg_until40)))
-new_fares_df$fee_tmg_until40with_discount <- as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_tmg_until40with_discount)))
-new_fares_df$fee_tmg_more40 <- as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_tmg_more40)))
-new_fares_df$fee_tmg_more40with_discount <- as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_tmg_more40with_discount)))                              
+new_fares_df$fee_in_cash <- 
+  as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_in_cash )))
+
+new_fares_df$fee_tmg_until40 <- 
+  as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fe<e_tmg_until40)))
+
+new_fares_df$fee_tmg_until40with_discount <- 
+  as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_tmg_until40with_discount)))
+
+new_fares_df$fee_tmg_more40 <- 
+  as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_tmg_more40)))
+
+new_fares_df$fee_tmg_more40with_discount <- 
+  as.numeric(gsub(",",".",gsub("€", "",new_fares_df$fee_tmg_more40with_discount)))                              
 
 #Hay una entrada Vigo-Vigo que estaba sin valor y queda a NAN-> se pone igual que a A Coruña
-new_fares_df$fee_in_cash [is.na(new_fares_df$fee_in_cash)] <- 1.55
-new_fares_df$fee_tmg_until40 [is.na(new_fares_df$fee_tmg_until40)] <- 0.88
-new_fares_df$fee_tmg_until40with_discount [is.na(new_fares_df$fee_tmg_until40with_discount)] <- 0.44
-new_fares_df$fee_tmg_more40 [is.na(new_fares_df$fee_tmg_more40)] <- 0.76
-new_fares_df$fee_tmg_more40with_discount [is.na(new_fares_df$fee_tmg_more40with_discount)] <- 0.38
+#Asignamos a una variable los puntos en los que se cumple que el trayecto es A Coruña - A Coruña
+cond= (new_fares_df$id_origin=='15030'&new_fares_df$id_destination=='15030')
+
+#Asignamos los valores, accediendo a estos gracias a la variable cond
+new_fares_df$fee_in_cash [is.na(new_fares_df$fee_in_cash)] <-
+new_fares_df$fee_in_cash[cond]
+
+new_fares_df$fee_tmg_until40 [is.na(new_fares_df$fee_tmg_until40)] <- 
+new_fares_df$fee_tmg_until40[cond]
+
+new_fares_df$fee_tmg_until40with_discount [is.na(new_fares_df$fee_tmg_until40with_discount)] <- 
+new_fares_df$fee_tmg_until40with_discount[cond]
+
+new_fares_df$fee_tmg_more40 [is.na(new_fares_df$fee_tmg_more40)] <- 
+new_fares_df$fee_tmg_more40[cond]
+
+new_fares_df$fee_tmg_more40with_discount [is.na(new_fares_df$fee_tmg_more40with_discount)] <- 
+new_fares_df$fee_tmg_more40with_discount[cond]
+
 
 #Se escribe el csv definitivo, con los valores de € ya numericos
 write.csv(new_fares_df, "D:\\IFFE\\TFM\\csv\\fares_final.csv",

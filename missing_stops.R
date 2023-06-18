@@ -133,7 +133,8 @@ missing_municipalities_df <- distinct(missing_municipalities_df) %>%
                           rename(id=as.numeric.tmp.)
 
 #Merge del df al de concellos que ya teniamos en base al ID, de modo que tenemos los nombres
-missing_municipalities_df <- merge(municipalities_df,missing_municipalities_df,by='id',all=FALSE)
+missing_municipalities_df <- merge(municipalities_df,missing_municipalities_df,
+                          by='id',all=FALSE)
 
 #Ahora se crea un df para el siguiente bucle....
 missing_municipalities_cut_df <- data.frame()
@@ -142,7 +143,7 @@ missing_municipalities_cut_df <- data.frame()
 #usando los dos primeros caracteres del nombre. Las paradas correspondientes a cada concello
 #las podemos filtrar gracias a los ids
 for(i in 1:nrow(missing_municipalities_df)){
-  #Se extraen los dos primeros cancellos del concello
+  #Se extraen los dos primeros caracteres del concello
   tmp <- str_extract(missing_municipalities_df$municipality[i],"^.{2}")
   #Se crea un df con los caracteres extraidos y su id correspondiente
   tmp_df <- data.frame(missing_municipalities_df$id[i],tmp)
@@ -150,7 +151,7 @@ for(i in 1:nrow(missing_municipalities_df)){
   missing_municipalities_cut_df<- rbind(missing_municipalities_cut_df,tmp_df)
   
 }
-#Ahjora se renombran las columnas
+#Se renombran las columnas
 missing_municipalities_cut_df <- missing_municipalities_cut_df %>% 
                               rename(municipality=tmp) %>%
                               rename(id=missing_municipalities_df.id.i.)
